@@ -54,13 +54,17 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 ### 启动服务
 
+**方式一：双击运行（推荐）**
+直接双击 `点击运行.py`，会自动打开浏览器
+
+**方式二：命令行运行**
 在工具目录下打开终端，运行：
 
 ```powershell
-python web_server.py
+python 点击运行.py
 ```
 
-启动成功后，打开浏览器访问：**http://localhost:5000**
+启动后会自动打开浏览器访问：**http://localhost:5000**
 
 ### 操作步骤
 
