@@ -20,35 +20,19 @@
 
 ## 安装步骤
 
-### 1. 安装 Python
+### 1. 下载并解压
 
-从 [Python 官网](https://www.python.org/downloads/) 下载并安装 Python 3.8 或更高版本，安装时勾选 "Add Python to PATH"。
+下载最新版本，解压到任意目录。
 
-### 2. 安装 ffmpeg
+### 2. 双击运行
 
-Windows 用户推荐使用 winget 安装：
+双击 `点击运行.py`，程序会自动检测并安装缺失的依赖。
 
-```powershell
-winget install ffmpeg
-```
+> 提示：如果提示 ffmpeg 未安装，输入 `y` 自动安装，或手动运行 `winget install Gyan.FFmpeg`
 
-或者从 [ffmpeg.org](https://ffmpeg.org/download.html) 下载并配置环境变量。
+### 3. 开始使用
 
-### 3. 安装依赖
-
-在工具目录下打开终端，运行：
-
-```powershell
-pip install -r requirements.txt
-```
-
-### 4. （可选）安装 GPU 加速
-
-如果使用 NVIDIA 显卡，安装 CUDA 后 Whisper 转录速度会大幅提升：
-
-```powershell
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-```
+打开浏览器访问 http://localhost:5000
 
 ## 使用方法
 
