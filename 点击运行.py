@@ -18,6 +18,32 @@ from datetime import datetime
 from pathlib import Path
 from functools import wraps
 
+# 自动安装依赖
+def install_deps():
+    deps = {
+        "flask": "flask",
+        "psutil": "psutil",
+        "faster-whisper": "faster-whisper",
+        "python-docx": "python-docx",
+    }
+    for module, package in deps.items():
+        try:
+            __import__(module)
+        except ImportError:
+            print(f"正在安装 {package}...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package, "-q"])
+    # 检查 ffmpeg
+    try:
+        subprocess.run(["ffmpeg", "-version"], capture_output=True, check=True)
+    except:
+        print("\n" + "!" * 50)
+        print("警告: ffmpeg 未安装!")
+        print("请运行: winget install ffmpeg")
+        print("或从 https://ffmpeg.org 下载")
+        print("!" * 50)
+
+install_deps()
+
 # 文件日志
 logging.basicConfig(
     level=logging.INFO,
