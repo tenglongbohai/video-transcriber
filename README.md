@@ -134,7 +134,7 @@ video_transcriber/
 ## 技术栈
 
 - **后端**：Flask（Python Web 框架）
-- **语音识别**：OpenAI Whisper
+- **语音识别**：Faster-Whisper（基于 OpenAI Whisper 的高性能实现，GPU 加速可达 4 倍速）
 - **AI 润色**：MiniMax API（Anthropic 兼容接口）
 - **前端**：HTML5 + CSS3 + JavaScript
 
