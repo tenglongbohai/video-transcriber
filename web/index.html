@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频转文字工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .header h1 {
+            font-size: 2.2em;
+            color: #00d9ff;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #888;
+        }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .left-col {
+            height: fit-content;
+        }
+        .right-col {
+            display: flex;
+            flex-direction: column;
+        }
+        .right-col .card {
+            flex: 1;
+        }
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .card-title {
+            font-size: 1.2em;
+            color: #00d9ff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-title .icon {
+            font-size: 1.4em;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b0b0b0;
+            font-weight: 500;
+        }
+        .file-input-wrapper {
+            position: relative;
+        }
+        .file-input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border: 2px dashed rgba(0,217,255,0.3);
+            border-radius: 10px;
+            color: #e0e0e0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .file-input:hover {
+            border-color: #00d9ff;
+            background: rgba(0,217,255,0.1);
+        }
+        .file-input.dragover {
+            border-color: #00d9ff;
+            background: rgba(0,217,255,0.2);
+        }
+        .file-name {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background: rgba(0,217,255,0.1);
+            border-radius: 8px;
+            font-size: 14px;
+            color: #00d9ff;
+            word-break: break-all;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        @media (max-width: 600px) {
+            .row {
+                grid-template-columns: 1fr;
+            }
+        }
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        select:focus {
+            outline: none;
+            border-color: #00d9ff;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .checkbox-item input {
+            width: 20px;
+            height: 20px;
+            accent-color: #00d9ff;
+            cursor: pointer;
+        }
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: nowrap;
+        }
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #00d9ff 0%, #0099cc 100%);
+            color: #1a1a2e;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,217,255,0.3);
+        }
+        .btn-primary:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #e0e0e0;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+            color: white;
+        }
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255,107,107,0.3);
+        }
+        .progress-section {
+            margin-top: 20px;
+        }
+        .progress-bar-container {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            height: 30px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00d9ff 0%, #00ff88 100%);
+            border-radius: 10px;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a1a2e;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .progress-info {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            text-align: center;
+        }
+        @media (max-width: 600px) {
+            .progress-info {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .progress-item {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .progress-item .label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        .progress-item .value {
+            font-size: 18px;
+            color: #00d9ff;
+            font-weight: 600;
+        }
+        .log-container {
+            background: rgba(0,0,0,0.4);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .log-item {
+            margin-bottom: 5px;
+            display: flex;
+            gap: 10px;
+        }
+        .log-time {
+            color: #666;
+        }
+        .log-info { color: #00ff88; }
+        .log-warning { color: #ffd93d; }
+        .log-error { color: #ff6b6b; }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .status-idle { background: rgba(128,128,128,0.3); color: #888; }
+        .status-running { background: rgba(0,217,255,0.2); color: #00d9ff; }
+        .status-paused { background: rgba(255,217,61,0.2); color: #ffd93d; }
+        .status-completed { background: rgba(0,255,136,0.2); color: #00ff88; }
+        .status-error { background: rgba(255,107,107,0.2); color: #ff6b6b; }
+        .memory-warning {
+            background: rgba(255,107,107,0.2);
+            border: 1px solid #ff6b6b;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-top: 10px;
+            color: #ff6b6b;
+            display: none;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #888;
+            font-size: 13px;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 视频转文字工具</h1>
+            <p>本地 Whisper 转录 + MiniMax AI 润色</p>
+        </div>
+
+        <!-- 主内容区：左右两列 -->
+        <div class="main-grid">
+            <!-- 左侧：文件选择 -->
+            <div class="card left-col">
+                <div class="card-title">
+                    <span class="icon">📁</span>
+                    文件选择
+                </div>
+                <div class="form-group">
+                    <label>视频文件</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="videoFile" class="file-input" accept="video/*,.mp4,.avi,.mkv,.mov,.wmv,.flv,.ts,.m2ts">
+                    </div>
+                    <div id="fileName" class="file-name" style="display:none;"></div>
+                </div>
+                <div class="form-group">
+                    <label>输出文件名</label>
+                    <input type="text" id="outputName" class="file-input" placeholder="输出文档名称" value="转录文档">
+                </div>
+                <div class="form-group">
+                    <label>Whisper 模型</label>
+                    <select id="modelSelect">
+                        <option value="tiny">Tiny (最快)</option>
+                        <option value="small" selected>Small (推荐)</option>
+                        <option value="medium">Medium (效果好)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>分段时长</label>
+                    <select id="chunkSelect">
+                        <option value="5" selected>5 分钟</option>
+                        <option value="10">10 分钟</option>
+                        <option value="15">15 分钟</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>选项</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="punctuationCheck" checked>
+                            本地标点
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="polishCheck">
+                            MiniMax 润色 ✨
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group" id="apiKeyGroup" style="display:none;">
+                    <label>MiniMax API Key</label>
+                    <input type="password" id="apiKeyInput" class="file-input" placeholder="sk-cp-...">
+                </div>
+            </div>
+
+            <!-- 右侧：操作和进度 -->
+            <div class="right-col">
+                <!-- 操作按钮 -->
+                <div class="card">
+                    <div class="card-title">
+                        <span class="icon">🚀</span>
+                        开始处理
+                    </div>
+                    <div class="btn-group">
+                        <button id="startBtn" class="btn btn-primary">▶ 开始转录</button>
+                        <button id="pauseBtn" class="btn btn-secondary" disabled>⏸ 暂停</button>
+                        <button id="stopBtn" class="btn btn-warning" disabled>⏹ 停止</button>
+                    </div>
+                </div>
+
+                <!-- 进度显示 -->
+                <div class="card">
+                    <div class="card-title">
+                        <span class="icon">📊</span>
+                        处理进度
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-bar-container">
+                            <div id="progressBar" class="progress-bar" style="width: 0%;">0%</div>
+                        </div>
+                        <div class="progress-info">
+                            <div class="progress-item">
+                                <div class="label">阶段</div>
+                                <div id="stageText" class="value">--</div>
+                            </div>
+                            <div class="progress-item">
+                                <div class="label">片段</div>
+                                <div id="chunkText" class="value">0/0</div>
+                            </div>
+                            <div class="progress-item">
+                                <div class="label">剩余</div>
+                                <div id="timeText" class="value">--</div>
+                            </div>
+                            <div class="progress-item">
+                                <div class="label">内存</div>
+                                <div id="memoryText" class="value">--</div>
+                            </div>
+                        </div>
+                        <div id="memoryWarning" class="memory-warning">
+                            ⚠️ 内存使用率过高
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 日志 -->
+                <div class="card">
+                    <div class="card-title">
+                        <span class="icon">📋</span>
+                        日志
+                    </div>
+                    <div id="logContainer" class="log-container">
+                        <div class="log-item">
+                            <span class="log-time">[--:--:--]</span>
+                            <span class="log-info">等待开始...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Whisper 转录 | MiniMax AI 润色 | 
+            <a href="https://weibo.com/u/3315426953" target="_blank" style="color: #00d9ff; text-decoration: none;">制作人 @科技锐评</a>
+        </div>
+    </div>
+
+    <script>
+        // 状态管理
+        let isProcessing = false;
+        let isPaused = false;
+        let eventSource = null;
+
+        // DOM 元素
+        const videoFile = document.getElementById('videoFile');
+        const fileName = document.getElementById('fileName');
+        const outputName = document.getElementById('outputName');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const progressBar = document.getElementById('progressBar');
+        const statusBadge = document.getElementById('statusBadge');
+        const stageText = document.getElementById('stageText');
+        const chunkText = document.getElementById('chunkText');
+        const timeText = document.getElementById('timeText');
+        const memoryText = document.getElementById('memoryText');
+        const memoryWarning = document.getElementById('memoryWarning');
+        const logContainer = document.getElementById('logContainer');
+        const polishCheck = document.getElementById('polishCheck');
+        const apiKeyGroup = document.getElementById('apiKeyGroup');
+        const apiKeyInput = document.getElementById('apiKeyInput');
+
+        // 文件选择
+        videoFile.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                fileName.textContent = `已选择: ${file.name} (${formatSize(file.size)})`;
+                fileName.style.display = 'block';
+                // 自动设置输出文件名
+                const baseName = file.name.replace(/\.[^/.]+$/, '');
+                outputName.value = baseName + '_转录';
+            }
+        });
+
+        // MiniMax润色复选框切换
+        polishCheck.addEventListener('change', function() {
+            apiKeyGroup.style.display = this.checked ? 'block' : 'none';
+            if (!this.checked) {
+                apiKeyInput.value = '';
+            }
+        });
+
+        // 拖拽支持
+        const dropZone = document.querySelector('.file-input-wrapper');
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.querySelector('.file-input').classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.querySelector('.file-input').classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.querySelector('.file-input').classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                videoFile.files = e.dataTransfer.files;
+                videoFile.dispatchEvent(new Event('change'));
+            }
+        });
+
+        // 格式化文件大小
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+            return (bytes / 1024 / 1024 / 1024).toFixed(2) + ' GB';
+        }
+
+        // 添加日志
+        function addLog(message, level = 'info') {
+            const now = new Date();
+            const time = now.toTimeString().split(' ')[0];
+            const levelClass = {
+                'info': 'log-info',
+                'warning': 'log-warning',
+                'error': 'log-error'
+            }[level];
+
+            const logItem = document.createElement('div');
+            logItem.className = 'log-item';
+            logItem.innerHTML = `
+                <span class="log-time">[${time}]</span>
+                <span class="${levelClass}">${message}</span>
+            `;
+            logContainer.appendChild(logItem);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // 更新状态显示
+        function updateStatus(status, message) {
+            const statusMap = {
+                'idle': { text: '待机', class: 'status-idle' },
+                'running': { text: '处理中', class: 'status-running' },
+                'paused': { text: '已暂停', class: 'status-paused' },
+                'completed': { text: '已完成', class: 'status-completed' },
+                'error': { text: '异常', class: 'status-error' }
+            };
+
+            if (statusMap[status]) {
+                statusBadge.textContent = statusMap[status].text;
+                statusBadge.className = 'status-badge ' + statusMap[status].class;
+            }
+
+            if (message) {
+                stageText.textContent = message;
+            }
+        }
+
+        // 更新进度
+        function updateProgress(progress, stage, chunk, total, timeLeft, memory) {
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = progress + '%';
+
+            if (stage) stageText.textContent = stage;
+            if (chunk !== undefined) chunkText.textContent = `${chunk}/${total || '?'}`;
+            if (timeLeft) timeText.textContent = timeLeft;
+            if (memory) {
+                memoryText.textContent = memory;
+                if (memory.includes('%') && parseInt(memory) > 80) {
+                    memoryWarning.style.display = 'block';
+                } else {
+                    memoryWarning.style.display = 'none';
+                }
+            }
+        }
+
+        // 开始转录
+        startBtn.addEventListener('click', async function() {
+            if (!videoFile.files.length) {
+                alert('请选择视频文件');
+                return;
+            }
+
+            const wantPolish = polishCheck.checked;
+            if (wantPolish && !apiKeyInput.value.trim()) {
+                alert('请输入 MiniMax API Key');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('video', videoFile.files[0]);
+            formData.append('output_name', outputName.value || '转录文档');
+            formData.append('model', document.getElementById('modelSelect').value);
+            formData.append('chunk_duration', document.getElementById('chunkSelect').value);
+            formData.append('punctuation', document.getElementById('punctuationCheck').checked);
+            formData.append('polish', wantPolish);
+            if (wantPolish) {
+                formData.append('api_key', apiKeyInput.value.trim());
+            }
+
+            isProcessing = true;
+            isPaused = false;
+
+            // 更新按钮状态
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            stopBtn.disabled = false;
+
+            updateStatus('running', '正在上传...');
+            addLog('开始上传视频文件...');
+
+            try {
+                const response = await fetch('/api/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('服务器错误: ' + response.status);
+                }
+
+                addLog('视频上传完成，开始处理...');
+                updateStatus('running', '音频提取中...');
+
+                // 启动 SSE 连接接收进度
+                eventSource = new EventSource('/api/progress');
+
+                eventSource.onmessage = function(e) {
+                    const data = JSON.parse(e.data);
+
+                    if (data.type === 'progress') {
+                        updateProgress(
+                            data.progress,
+                            data.stage,
+                            data.current,
+                            data.total,
+                            data.time_left,
+                            data.memory
+                        );
+                    } else if (data.type === 'log') {
+                        addLog(data.message, data.level);
+                    } else if (data.type === 'complete') {
+                        addLog('✅ 转录完成！文件已保存', 'info');
+                        updateStatus('completed', '已完成');
+                        updateProgress(100, '完成', '100%', '100%', '0秒', data.memory);
+                        resetButtons();
+
+                        // 自动下载
+                        if (data.output_path) {
+                            window.location.href = '/api/download/' + encodeURIComponent(data.output_name);
+                        }
+                    } else if (data.type === 'error') {
+                        addLog('❌ 错误: ' + data.message, 'error');
+                        updateStatus('error', '异常');
+                        resetButtons();
+                    } else if (data.type === 'memory_warning') {
+                        memoryWarning.style.display = 'block';
+                        addLog('⚠️ 内存使用率过高', 'warning');
+                    }
+                };
+
+                eventSource.onerror = function() {
+                    if (isProcessing) {
+                        addLog('连接中断，正在重连...', 'warning');
+                    }
+                };
+
+            } catch (error) {
+                addLog('❌ 错误: ' + error.message, 'error');
+                updateStatus('error', '异常');
+                resetButtons();
+            }
+        });
+
+        // 暂停
+        pauseBtn.addEventListener('click', async function() {
+            if (!isProcessing) return;
+
+            try {
+                if (isPaused) {
+                    await fetch('/api/pause', { method: 'POST' });
+                    pauseBtn.textContent = '⏸ 暂停';
+                    isPaused = false;
+                    updateStatus('running', '继续处理');
+                    addLog('继续处理');
+                } else {
+                    await fetch('/api/pause', { method: 'POST' });
+                    pauseBtn.textContent = '▶ 继续';
+                    isPaused = true;
+                    updateStatus('paused', '已暂停');
+                    addLog('已暂停');
+                }
+            } catch (error) {
+                addLog('暂停操作失败: ' + error.message, 'error');
+            }
+        });
+
+        // 停止
+        stopBtn.addEventListener('click', async function() {
+            if (!isProcessing) return;
+
+            if (!confirm('确定要停止吗？进度已保存，可稍后继续。')) return;
+
+            try {
+                await fetch('/api/stop', { method: 'POST' });
+                if (eventSource) {
+                    eventSource.close();
+                    eventSource = null;
+                }
+                addLog('已停止任务');
+                updateStatus('idle', '已停止');
+                resetButtons();
+            } catch (error) {
+                addLog('停止操作失败: ' + error.message, 'error');
+            }
+        });
+
+        // 重置按钮状态
+        function resetButtons() {
+            isProcessing = false;
+            isPaused = false;
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            pauseBtn.textContent = '⏸ 暂停';
+            stopBtn.disabled = true;
+        }
+
+        // 内存监控定时器
+        setInterval(async function() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                memoryText.textContent = data.memory + '%';
+                if (data.memory > 80) {
+                    memoryWarning.style.display = 'block';
+                }
+            } catch (e) {}
+        }, 5000);
+    </script>
+</body>
+</html>
