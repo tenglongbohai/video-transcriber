@@ -38,8 +38,30 @@ def install_deps():
     except:
         print("\n" + "!" * 50)
         print("警告: ffmpeg 未安装!")
-        print("请运行: winget install ffmpeg")
-        print("或从 https://ffmpeg.org 下载")
+        print("是否自动安装? (y/n)")
+        choice = input().strip().lower()
+        if choice == 'y':
+            # 尝试用 winget 安装
+            try:
+                print("正在安装 ffmpeg (使用 winget)...")
+                subprocess.check_call(["winget", "install", "Gyan.FFmpeg"], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+                print("ffmpeg 安装成功! 请重启程序")
+                sys.exit(0)
+            except:
+                try:
+                    # 尝试用 scoop 安装
+                    print("正在安装 ffmpeg (使用 scoop)...")
+                    subprocess.check_call(["scoop", "install", "ffmpeg"], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+                    print("ffmpeg 安装成功! 请重启程序")
+                    sys.exit(0)
+                except:
+                    print("自动安装失败，请手动安装:")
+                    print("  winget install Gyan.FFmpeg")
+                    print("  或从 https://ffmpeg.org 下载")
+                    sys.exit(1)
+        else:
+            print("继续运行，但转录功能可能不可用")
+            print("手动安装: winget install Gyan.FFmpeg")
         print("!" * 50)
 
 install_deps()
