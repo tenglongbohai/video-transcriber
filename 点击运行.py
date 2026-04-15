@@ -105,7 +105,7 @@ except ImportError:
 # 创建 Flask 应用
 app = Flask(__name__, static_folder='web', template_folder='web')
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 * 1024  # 10GB max
-app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['UPLOAD_FOLDER'] = '输出目录'
 
 # 确保上传目录存在
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)

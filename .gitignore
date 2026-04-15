@@ -1,7 +1,7 @@
 __pycache__/
 *.pyc
 *.pyo
-uploads/
+输出目录/
 .env
 *.log
 .DS_Store

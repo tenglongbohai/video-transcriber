@@ -1,4 +1,4 @@
-# 视频转文字工具
+# 视频转文字工具 v1.0.0
 
 一款基于 Web 的视频转录工具，支持本地 Whisper 语音识别和 MiniMax AI 润色，可将视频中的语音快速转换为带标点、分段的 Word 文档。
 
@@ -128,7 +128,7 @@ video_transcriber/
 ├── web/
 │   └── index.html     # 前端页面
 ├── requirements.txt   # Python 依赖
-└── uploads/           # 上传文件目录
+└── 输出目录/          # 输出文件目录
 ```
 
 ## 技术栈
