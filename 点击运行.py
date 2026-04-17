@@ -837,8 +837,14 @@ def run_transcription(video_path, output_dir, config, task_id=None):
                     saved = json.load(f)
                     saved_video = saved.get('video_path', '')
                     
+                    # 转换相对路径为绝对路径
+                    if not os.path.isabs(saved_video):
+                        saved_video_abs = os.path.join(os.path.dirname(__file__), saved_video)
+                    else:
+                        saved_video_abs = saved_video
+                    
                     # 必须原始视频文件还存在，且文件名匹配，才续传
-                    video_exists = os.path.exists(saved_video)
+                    video_exists = os.path.exists(saved_video_abs)
                     
                     # 比较文件名（去掉uuid部分）
                     original_name = os.path.basename(video_path)
