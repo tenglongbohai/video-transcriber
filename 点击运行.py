@@ -1373,3 +1373,7 @@ if __name__ == '__main__':
             print(f"Flask 服务异常: {e}")
             print("5秒后重新启动...")
             time.sleep(5)
+        except BaseException as e:
+            print(f"程序异常: {e}")
+            print("5秒后重新启动...")
+            time.sleep(5)
