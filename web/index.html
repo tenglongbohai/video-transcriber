@@ -1231,8 +1231,8 @@
             reconnectAttempts = 0;
             sseConnected = true;
 
-            // 开始轮询（作为备用）
-            startPolling(task);
+            // 只用 SSE，禁用轮询避免重复
+            // startPolling(task);
 
             eventSource = new EventSource('/api/progress');
 
