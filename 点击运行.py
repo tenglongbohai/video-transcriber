@@ -1373,13 +1373,13 @@ if __name__ == '__main__':
         try:
             app.run(host='0.0.0.0', port=5000, debug=False, threaded=True, use_reloader=False)
         except KeyboardInterrupt:
-            print("程序已停止")
+            print("\n程序已停止")
             break
-        except Exception as e:
-            print(f"Flask 服务异常: {e}")
-            print("5秒后重新启动...")
-            time.sleep(5)
         except BaseException as e:
-            print(f"程序异常: {e}")
-            print("5秒后重新启动...")
-            time.sleep(5)
+            if not isinstance(e, KeyboardInterrupt):
+                print(f"程序异常: {e}")
+                print("5秒后重新启动...")
+                time.sleep(5)
+            else:
+                print("\n程序已停止")
+                break
