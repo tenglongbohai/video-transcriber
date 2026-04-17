@@ -439,14 +439,14 @@
         .log-container {
             background: rgba(0,0,0,0.4);
             border-radius: 10px;
-            padding: 15px;
-            height: 300px;
+            padding: 12px;
+            height: 200px;
             min-height: 150px;
-            max-height: 500px;
+            max-height: 250px;
             overflow-y: auto;
             font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 13px;
-            line-height: 1.6;
+            font-size: 12px;
+            line-height: 1.5;
         }
         .log-item {
             margin-bottom: 5px;
@@ -1130,12 +1130,19 @@
         }
 
         // 处理进度/日志消息的通用函数
+        let lastProgressStage = '';  // 记录上次阶段，避免重复日志
         function handleProgressData(data, task) {
             if (data.type === 'progress') {
                 const currentTask = taskQueue.find(t => t.id === currentTaskId);
                 if (currentTask) {
                     currentTask.progress = data.progress;
                     currentTask.stage = data.stage || '处理中';
+                }
+                // 去重：只在阶段变化时记录日志
+                const stageKey = data.stage + '_' + data.current;
+                if (data.stage && stageKey !== lastProgressStage) {
+                    lastProgressStage = stageKey;
+                    addLog(data.stage + ' ' + (data.current ? `[${data.current}/${data.total || '?'}]` : ''));
                 }
                 updateProgress(
                     data.progress,
