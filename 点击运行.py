@@ -864,7 +864,19 @@ def run_transcription(video_path, output_dir, config, task_id=None):
                     if video_exists and name_match and saved.get('total_chunks') == total_chunks:
                         start_chunk_idx = saved.get('last_completed_chunk', 0) + 1
                         completed_texts = saved.get('texts', [])
-                        send_task_sse({"type": "log", "level": "info", "message": f"检测到进度文件，从片段 {start_chunk_idx + 1} 继续（已完成 {len(completed_texts)} 个片段）"})
+                        completed_count = len(completed_texts)
+                        # 计算初始进度：已完成片段占总进度的比例（转录阶段占5%-65%）
+                        resume_progress = 5 + int(completed_count / total_chunks * 60)
+                        # 发送初始进度（告诉前端已完成片段数）
+                        send_task_sse({
+                            "type": "progress",
+                            "progress": resume_progress,
+                            "stage": f"续传片段 {start_chunk_idx + 1}/{total_chunks}",
+                            "current": completed_count,
+                            "total": total_chunks,
+                            "time_left": ""
+                        })
+                        send_task_sse({"type": "log", "level": "info", "message": f"检测到进度文件，从片段 {start_chunk_idx + 1} 继续（已完成 {completed_count} 个片段）"})
                     elif not video_exists:
                         # 原始视频不存在，视为新任务
                         send_task_sse({"type": "log", "level": "info", "message": "未检测到之前的视频文件，开始新任务"})
