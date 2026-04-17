@@ -207,13 +207,17 @@ def send_sse(data, task_id=None):
 def sse_generator():
     """SSE 流生成器"""
     import time as time_module
-    while True:  # 始终保持连接
-        try:
-            data = message_queue.get(timeout=5)
-            yield f"data: {data}\n\n"
-        except queue.Empty:
-            # 发送心跳保持连接
-            yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
+    try:
+        while True:  # 始终保持连接
+            try:
+                data = message_queue.get(timeout=5)
+                yield f"data: {data}\n\n"
+            except queue.Empty:
+                # 发送心跳保持连接
+                yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
+    except GeneratorExit:
+        # 客户端断开连接
+        pass
 
 
 # ============================================================================
