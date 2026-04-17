@@ -828,7 +828,7 @@ def run_transcription(video_path, output_dir, config, task_id=None):
 
         send_task_sse({"type": "log", "level": "info", "message": f"音频时长: {total_duration:.0f}秒, 分为 {total_chunks} 个片段"})
 
-        # 检查断点续录（通过 output_name 匹配，不依赖完整视频路径）
+        # 检查断点续录（通过 output_name 和原始视频文件匹配）
         start_chunk_idx = 0
         completed_texts = []
         if os.path.exists(progress_file):
@@ -836,22 +836,28 @@ def run_transcription(video_path, output_dir, config, task_id=None):
                 with open(progress_file, 'r', encoding='utf-8') as f:
                     saved = json.load(f)
                     saved_video = saved.get('video_path', '')
-                    # 比较文件名（去掉uuid部分），只要原文件名相同就匹配
+                    
+                    # 必须原始视频文件还存在，且文件名匹配，才续传
+                    video_exists = os.path.exists(saved_video)
+                    
+                    # 比较文件名（去掉uuid部分）
                     original_name = os.path.basename(video_path)
                     saved_original_name = os.path.basename(saved_video)
-                    # 提取原始文件名进行比较（去掉uuid前缀和临时路径）
                     if '_' in original_name and '_' in saved_original_name:
-                        # 去掉uuid部分后比较
                         orig_short = '_'.join(original_name.split('_')[1:])
                         saved_short = '_'.join(saved_original_name.split('_')[1:])
                         name_match = (orig_short == saved_short)
                     else:
                         name_match = (original_name == saved_original_name)
                     
-                    if name_match and saved.get('total_chunks') == total_chunks:
+                    # 只有视频文件存在且文件名匹配时才续传
+                    if video_exists and name_match and saved.get('total_chunks') == total_chunks:
                         start_chunk_idx = saved.get('last_completed_chunk', 0) + 1
                         completed_texts = saved.get('texts', [])
                         send_task_sse({"type": "log", "level": "info", "message": f"检测到进度文件，从片段 {start_chunk_idx + 1} 继续（已完成 {len(completed_texts)} 个片段）"})
+                    elif not video_exists:
+                        # 原始视频不存在，视为新任务
+                        send_task_sse({"type": "log", "level": "info", "message": "未检测到之前的视频文件，开始新任务"})
             except:
                 pass
 
