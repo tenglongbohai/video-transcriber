@@ -1103,7 +1103,7 @@ def transcribe():
 
     # 启动后台任务
     thread = threading.Thread(target=run_transcription, args=(video_path, app.config['UPLOAD_FOLDER'], config, task_id))
-    thread.daemon = True
+    thread.daemon = False  # 非守护线程，确保任务完成
     thread.start()
 
     return jsonify({"status": "started", "video_path": video_path, "task_id": task_id})
@@ -1154,7 +1154,7 @@ def resume():
 
     # 启动后台任务
     thread = threading.Thread(target=run_transcription, args=(video_path, output_dir, config, task_id))
-    thread.daemon = True
+    thread.daemon = False  # 非守护线程，确保任务完成
     thread.start()
 
     return jsonify({"status": "resumed", "start_chunk": config["resume_from"], "task_id": task_id})
@@ -1343,4 +1343,14 @@ if __name__ == '__main__':
 
     threading.Thread(target=open_browser, daemon=True).start()
 
-    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
+    # 启动 Flask 服务，自动重启防止崩溃
+    while True:
+        try:
+            app.run(host='0.0.0.0', port=5000, debug=False, threaded=True, use_reloader=False)
+        except KeyboardInterrupt:
+            print("程序已停止")
+            break
+        except Exception as e:
+            print(f"Flask 服务异常: {e}")
+            print("5秒后重新启动...")
+            time.sleep(5)
