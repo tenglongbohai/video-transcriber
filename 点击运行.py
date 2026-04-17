@@ -1050,6 +1050,25 @@ def run_transcription(video_path, output_dir, config, task_id=None):
 
         send_task_sse({"type": "log", "level": "info", "message": f"标点处理后: {len(full_text)} 字符"})
 
+        # 重新生成 Word 文档（包含润色/标点后的完整内容）
+        send_task_sse({"type": "log", "level": "info", "message": "正在生成最终文档..."})
+        try:
+            # 删除旧文档
+            if os.path.exists(output_path):
+                os.remove(output_path)
+            # 创建新文档并写入润色后的内容
+            success, msg = word_exporter.create_initial_document(
+                output_path,
+                title=f"视频转录 - {output_name}"
+            )
+            if success:
+                paragraphs = punctuation_adder.split_paragraphs(full_text, 500)
+                success, msg = word_exporter.append_paragraphs(paragraphs, output_path)
+                if success:
+                    send_task_sse({"type": "log", "level": "info", "message": f"文档生成完成: {os.path.getsize(output_path)/1024:.1f} KB"})
+        except Exception as e:
+            send_task_sse({"type": "log", "level": "warning", "message": f"文档生成失败: {e}"})
+
         # 完成
         send_task_sse({"type": "progress", "progress": 100, "stage": "完成", "time_left": "0秒"})
         send_task_sse({
