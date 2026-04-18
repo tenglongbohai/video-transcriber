@@ -135,13 +135,28 @@ python 点击运行.py
 
 ```
 video_transcriber_v2/
-├── 点击运行.py        # 主程序（Web服务 + 转录 + 润色）
-├── requirements.txt   # Python 依赖
-├── README.md          # 使用说明
-├── web/
-│   └── index.html     # 前端页面
-└── 输出文件/          # 转录结果目录（自动创建）
+├── main.py                      # Flask Web 主程序，所有 API 接口
+├── requirements.txt              # Python 依赖列表
+├── README.md                     # 使用说明文档
+├── .gitignore                    # Git 忽略规则
+├── web/                         # 前端资源
+│   └── index.html               # Web 界面页面
+├── core/                        # 核心功能模块
+│   ├── __init__.py              # 包初始化
+│   ├── 音频提取.py              # 用 ffmpeg 从视频提取音频
+│   ├── 转录.py                  # 用 faster-whisper 识别语音
+│   ├── 标点处理.py              # 给无标点文本添加标点
+│   ├── 润色.py                  # 调用 MiniMax API 润色文本
+│   ├── 导出Word.py              # 生成 .docx 文档
+│   └── 进度管理.py              # SSE 实时推送转录进度
+├── 检测环境.bat                 # 一键检测/安装 Python、ffmpeg 依赖
+├── 双击运行(后等待几秒钟).bat   # 一键启动服务
+└── 关闭服务.bat                 # 一键关闭服务
 ```
+
+**运行时产物（不打包，不上传）：**
+- `web_server.log` - 程序运行日志
+- `输出文件/` - 转录结果目录
 
 ## 技术栈
 
