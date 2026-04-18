@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>视频转文字工具 - 启动中</title>
+    <style>
+        body { font-family: Arial; background: #1a1a2e; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { text-align: center; padding: 40px; background: #16213e; border-radius: 15px; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        h1 { color: #00d9ff; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #333; border-top: 5px solid #00d9ff; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>视频转文字工具</h1>
+        <div class="spinner"></div>
+        <p>服务启动中，请稍候...</p>
+        <p id="status">正在启动 Flask 服务...</p>
+    </div>
+    <script>
+        function checkService() {
+            fetch('http://localhost:5000/').then(r => {
+                if (r.ok) window.location.href = 'http://localhost:5000/';
+            }).catch(() => {});
+        }
+        setInterval(checkService, 500);
+    </script>
+</body>
+</html>

@@ -616,6 +616,7 @@
                         <button id="resumeBtn" class="btn btn-secondary" style="display:none;">▶ 继续</button>
                         <button id="pauseBtn" class="btn btn-secondary" disabled>⏸ 暂停</button>
                         <button id="stopBtn" class="btn btn-warning" disabled>⏹ 停止</button>
+                        <button id="shutdownBtn" class="btn btn-danger" onclick="shutdownServer()">🛑 关闭服务</button>
                     </div>
                 </div>
 
@@ -673,9 +674,18 @@
             Whisper 转录 | MiniMax AI 润色 | 多文件队列支持 | 
             <a href="https://weibo.com/u/3315426953" target="_blank" style="color: #00d9ff; text-decoration: none;">制作人 @科技锐评</a>
         </div>
+
     </div>
 
     <script>
+        // 关闭服务器
+        function shutdownServer() {
+            if (!confirm('确定要关闭服务器吗？所有正在进行的任务将被中断！')) return;
+            fetch('/api/shutdown', { method: 'POST' })
+                .then(() => window.close())
+                .catch(() => window.close());
+        }
+        
         // 状态管理
         let isProcessing = false;
         let isPaused = false;
