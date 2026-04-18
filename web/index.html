@@ -1093,7 +1093,9 @@
 
             const formData = new FormData();
             formData.append('video', nextTask.file);
-            formData.append('output_name', nextTask.outputName);
+            // 每个视频用自己的文件名作为输出名（去掉扩展名）
+            const videoFileName = nextTask.file.name.replace(/\.[^/.]+$/, '');
+            formData.append('output_name', videoFileName);
             formData.append('model', document.getElementById('modelSelect').value);
             formData.append('chunk_duration', document.getElementById('chunkSelect').value);
             formData.append('punctuation', document.getElementById('punctuationCheck').checked);
@@ -1286,7 +1288,9 @@
 
             const formData = new FormData();
             formData.append('video', videoFiles.files[0]);
-            formData.append('output_name', outputName.value || '转录文档');
+            // 默认使用视频文件名作为输出名
+            const videoFileName = videoFiles.files[0].name.replace(/\.[^/.]+$/, '');
+            formData.append('output_name', outputName.value || videoFileName);
             formData.append('model', document.getElementById('modelSelect').value);
             formData.append('chunk_duration', document.getElementById('chunkSelect').value);
             formData.append('punctuation', document.getElementById('punctuationCheck').checked);
