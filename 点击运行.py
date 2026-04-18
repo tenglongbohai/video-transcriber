@@ -1410,11 +1410,14 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             print("\n程序已停止")
             break
+        except GeneratorExit:
+            # SSE 连接正常断开
+            print("\n客户端断开连接")
+            break
         except BaseException as e:
-            if not isinstance(e, KeyboardInterrupt):
-                print(f"程序异常: {e}")
-                print("5秒后重新启动...")
-                time.sleep(5)
-            else:
+            if isinstance(e, (KeyboardInterrupt, SystemExit)):
                 print("\n程序已停止")
                 break
+            print(f"程序异常: {e}")
+            print("5秒后重新启动...")
+            time.sleep(5)
