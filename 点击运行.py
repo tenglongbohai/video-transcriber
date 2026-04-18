@@ -605,30 +605,47 @@ class MiniMaxAPI:
                         raw_result = block.text.strip()
                         log(f"润色完成，返回 {len(raw_result)} 字符", "info")
                         
-                        # 提取正文部分（去掉视频大纲）
+                        # 提取正文和大纲部分
                         # 格式: --- **视频大纲：** ... **正文：** ...
                         if "**正文：**" in raw_result or "**正文:**" in raw_result:
                             lines = raw_result.split('\n')
+                            in_outline = False
                             in_body = False
+                            outline_lines = []
                             body_lines = []
                             for line in lines:
-                                if '**正文' in line:
-                                    in_body = True
-                                    # 不跳过，继续处理后续行
+                                # 检测大纲开始
+                                if '**视频大纲' in line or '**大纲' in line:
+                                    in_outline = True
+                                    in_body = False
                                     continue
+                                # 检测正文开始
+                                if '**正文' in line:
+                                    in_outline = False
+                                    in_body = True
+                                    continue
+                                # 跳过结束标记
+                                if line.strip().startswith('---'):
+                                    continue
+                                # 收集大纲
+                                if in_outline:
+                                    if line.strip():
+                                        outline_lines.append(line.strip())
+                                # 收集正文
                                 if in_body:
-                                    # 跳过空行
                                     if not line.strip():
                                         continue
                                     body_lines.append(line.strip())
+                            
+                            # 返回 (正文, 大纲) 元组
                             if body_lines:
-                                return '\n'.join(body_lines)
-                        
-                        # 如果没有标准格式，直接返回原文本（让后续标点处理）
-                        return raw_result
+                                result = '\n'.join(body_lines)
+                                outline = '\n'.join(outline_lines) if outline_lines else ""
+                                return result, outline
+                            return raw_result, ""
 
                 log("润色返回空结果", "warning")
-                return text
+                return text, ""
 
             except Exception as e:
                 error_str = str(e)
@@ -640,10 +657,10 @@ class MiniMaxAPI:
                         retry_delay *= 2
                     else:
                         log(f"MiniMax API 重试 {max_retries} 次仍失败: {e}", "error")
-                        return text
+                        return text, ""
                 else:
                     log(f"MiniMax API 错误: {e}", "error")
-                    return text
+                    return text, ""
 
 
 class WordExporter:
@@ -1012,6 +1029,7 @@ def run_transcription(video_path, output_dir, config, task_id=None):
         send_task_sse({"type": "log", "level": "info", "message": f"原始文本: {len(full_text)} 字符"})
 
         state.stage = "后处理"
+        video_outline = ""  # 保存视频大纲
 
         if config.get("polish", False):
             api_key = config.get("api_key", "").strip()
@@ -1026,12 +1044,16 @@ def run_transcription(video_path, output_dir, config, task_id=None):
                     segments = punctuation_adder.split_paragraphs(full_text, 800)
                     polish_start = time.time()
                     polished = []
+                    outlines = []
 
                     def polish_log(msg, level="info"):
                         send_task_sse({"type": "log", "level": level, "message": msg})
 
                     for i, seg in enumerate(segments):
-                        polished.append(minimax.polish_text(seg, log_callback=polish_log))
+                        result, outline = minimax.polish_text(seg, log_callback=polish_log)
+                        polished.append(result)
+                        if outline:
+                            outlines.append(outline)
                         elapsed = time.time() - polish_start
                         remaining = int(elapsed / (i + 1) * (len(segments) - i - 1))
                         time_str = f"{remaining}秒" if remaining < 60 else f"{remaining // 60}分{remaining % 60}秒"
@@ -1042,8 +1064,11 @@ def run_transcription(video_path, output_dir, config, task_id=None):
                             "time_left": time_str
                         })
                     full_text = " ".join(polished)
+                    video_outline = "\n".join(outlines) if outlines else ""
+                    if video_outline:
+                        send_task_sse({"type": "log", "level": "info", "message": f"提取大纲: {video_outline[:100]}..."})
                     send_task_sse({"type": "log", "level": "info", "message": f"润色完成: {len(full_text)} 字符"})
-                    
+
                     # 检查润色结果是否有标点，如果没有则添加标点
                     has_punct = any(c in '。！？.?!' for c in full_text)
                     if not has_punct:
@@ -1062,7 +1087,7 @@ def run_transcription(video_path, output_dir, config, task_id=None):
 
         send_task_sse({"type": "log", "level": "info", "message": f"标点处理后: {len(full_text)} 字符"})
 
-        # 重新生成 Word 文档（包含润色/标点后的完整内容）
+        # 重新生成 Word 文档（包含润色/标点后的完整内容和大纲）
         send_task_sse({"type": "log", "level": "info", "message": "正在生成最终文档..."})
         try:
             # 删除旧文档
@@ -1074,6 +1099,20 @@ def run_transcription(video_path, output_dir, config, task_id=None):
                 title=f"视频转录 - {output_name}"
             )
             if success:
+                # 如果有大纲，先写入大纲
+                if video_outline:
+                    from docx import Document as DocXDocument
+                    doc = DocXDocument(output_path)
+                    doc.add_paragraph()  # 空行
+                    doc.add_heading("视频大纲", level=2)
+                    # 按行添加大纲
+                    for line in video_outline.split('\n'):
+                        if line.strip():
+                            doc.add_paragraph(line.strip(), style='List Number')
+                    doc.add_paragraph()  # 空行分隔
+                    doc.save(output_path)
+                    send_task_sse({"type": "log", "level": "info", "message": f"已添加视频大纲"})
+                # 写入正文
                 paragraphs = punctuation_adder.split_paragraphs(full_text, 500)
                 success, msg = word_exporter.append_paragraphs(paragraphs, output_path)
                 if success:
