@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "skills": {
+    "chrome-devtools": {
+      "version": "0.1.1",
+      "installedAt": 1777014622221
+    },
+    "prompt-enhancer": {
+      "version": "1.0.1",
+      "installedAt": 1777016969401
+    }
+  }
+}
